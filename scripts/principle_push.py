@@ -4,17 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import odeint
 
-#import ploting packages
-import os
-
-os.environ["PATH"] += ':/usr/local/texlive/2015/bin/x86_64-darwin'
-plt.rc('text', usetex=True)
-plt.rc('font', family='serif')
-plt.tick_params(labelsize=16)
-plt.clf()
-
 #declare simulation paramaters:
-#basel proliferation rate
+#basal proliferation rate
 rho = 1.0
 
 #death rate
@@ -33,27 +24,15 @@ Num_sites = 25000
 c = 1.0
 
 #the varience in Treg-antigen binding around zero
-sigma_c = 0.01
+sigma_c = 0.0
 
 #the varience in Treg-antigen binding around c
-sigma_cp = 0.01
+sigma_cp = 0.0
  
 
 #the binding
-pval_cell = 0.3
-pval_reg = 0.6
-
-#mean number of sites that a tcell binds to
-print(pval_cell*Num_sites)
-
-#mean number of sites that a treg binds to
-print( pval_reg * Num_sites )
-
-#the probability that at least one Tcell binds to the new site
-print(  1- (pval_cell)**(Num_tcell) )
-
-#probability that at least one Treg binds to the new site
-print( 1 - ( pval_reg )**( Num_treg )  )
+pval_cell = 0.06
+pval_reg = 0.06
 
 
 #generate a Treg-Tcell graph
@@ -61,7 +40,7 @@ print( 1 - ( pval_reg )**( Num_treg )  )
 
 #the vx densities
 max_v = 1.0
-vx = max_v * np.ones(Num_sites) + np.random.uniform(-max_v/2,max_v/2,Num_sites) 
+vx = max_v * np.ones(Num_sites) #+ np.random.uniform(-max_v/2,max_v/2,Num_sites) 
 
 
 #layer 1 is the conectivity of the Tcells and antigen sequences
@@ -69,222 +48,202 @@ layer1 = np.zeros([Num_tcell,Num_sites])
 layer1 = np.random.choice( [0,1] , size= (Num_tcell,Num_sites), replace = True ,  p= [1- pval_cell,pval_cell]) 
 
 
-#each site needs at least one t cell to bind to it
-for i in range(Num_sites):
+# #each site needs at least one t cell to bind to it
+# for i in range(Num_sites):
 	
-	if ( np.sum(layer1[:,i]) <= 0  ):
+# 	if ( np.sum(layer1[:,i]) <= 0  ):
 
-		num = np.random.randint(0,Num_tcell)
+# 		num = np.random.randint(0,Num_tcell)
 
-		layer1[num,i] = 1
+# 		layer1[num,i] = 1
 
-#each tcell should bind to at least site
-for i in range(Num_tcell):
+# #each tcell should bind to at least site
+# for i in range(Num_tcell):
 
-	if ( np.sum( layer1[i,:] <= 0  ) ):
+# 	if ( np.sum( layer1[i,:] <= 0  ) ):
 
-		num = np.random.randint(0,Num_sites)
+# 		num = np.random.randint(0,Num_sites)
 
-		layer1[ i  , num ] = 1
+# 		layer1[ i  , num ] = 1
 
 
 plt.hist( layer1.sum( axis = 0) )
+plt.gca().set_title('Antigen connectivity to T cells')
 plt.show()
 
 
 plt.hist( layer1.sum( axis = 1) )
+plt.gca().set_title('T cells connectivity to antigens')
 plt.show()
 
 
 
 
-#layer 2 is the connectivvity of the binding of the antigen sites to the number of Tregs
+#layer 2 is the connectivity of the binding of the antigen sites to the number of Tregs
 layer2 = np.zeros([Num_sites,Num_treg])
 layer2 = (c + np.random.normal(0,sigma_cp,(Num_sites,Num_treg) ) )* np.random.choice( [0,1] , size = (Num_sites , Num_treg), replace = True ,  p=[1-pval_reg, pval_reg]) 
 
 
-#make sure that all of the elements have probility that is less than 1
-for i in range(Num_sites):
-	for j in range(Num_treg):
+# #make sure that all of the elements have probility that is less than 1
+# for i in range(Num_sites):
+# 	for j in range(Num_treg):
 
-		if ( layer2[i,j] > 1):
+# 		if ( layer2[i,j] > 1):
 
-			layer2[i,j] = 1
-
-
-#add some noise to each site, still make sure each element is less than 1
-for i in range(Num_sites):
-
-	for j in range(Num_treg):
-
-		if ( layer2[i,j] == 0 ):
-
-			val = np.abs( np.random.normal(0,sigma_c ) )
-
-			layer2[i,j] = np.random.uniform(0,1)
-
-			if (val < 1):
-
-				layer2[i,j] = val
+# 			layer2[i,j] = 1
 
 
+# #add some noise to each site, still make sure each element is less than 1
+# for i in range(Num_sites):
+
+# 	for j in range(Num_treg):
+
+# 		if ( layer2[i,j] == 0 ):
+
+# 			val = np.abs( np.random.normal(0,sigma_c ) )
+
+# 			layer2[i,j] = np.random.uniform(0,1)
+
+# 			if (val < 1):
+
+# 				layer2[i,j] = val
 
 
-#add some noise around c to each site
-for i in range(Num_sites):
 
-	if ( np.sum(layer2[i,:]) <= c - 0.01   ):
 
-		num = np.random.randint(0,Num_treg)
+# #add some noise around c to each site
+# for i in range(Num_sites):
 
-		layer2[i,num] = c  + np.random.normal(0,sigma_cp )
+# 	if ( np.sum(layer2[i,:]) <= c - 0.01   ):
+
+# 		num = np.random.randint(0,Num_treg)
+
+# 		layer2[i,num] = c  + np.random.normal(0,sigma_cp )
 
 
 
 plt.hist( layer2.sum( axis = 0) )
+plt.gca().set_title('Treg connectivity to antigens')
 plt.show()
 
 plt.hist( layer2.sum( axis = 1) )
+plt.gca().set_title('Antigen connectivity to Tregs')
 plt.show()
 
 
 #compute the mean binding, this will be used when we look at how well our aproxomation works
-mean_reg = np.zeros([Num_treg])
+# mean_reg = np.zeros([Num_treg])
 
-for i in range(Num_treg):
+# for i in range(Num_treg):
 
-	mean_reg[i] = np.sum( layer1[i,:] * layer2[:,i]     )
-
-
-
-#compute just graphical overlap
-# +1 for each treg connected to tcell
-connectivity_count = np.zeros([Num_tcell , Num_treg])
-
-for i in range(Num_tcell):
-
-	for j in range(Num_treg):
+# 	mean_reg[i] = np.sum( layer1[i,:] * layer2[:,i]     )
 
 
-		val = 0
-		for k in range(Num_sites):
+
+# #compute just graphical overlap
+# # +1 for each treg connected to tcell
+# connectivity_count = np.zeros([Num_tcell , Num_treg])
+
+# for i in range(Num_tcell):
+
+# 	for j in range(Num_treg):
+
+
+# 		val = 0
+# 		for k in range(Num_sites):
 	
-			if (  layer1[i,k] > c/10 and layer2[k,j] > c/10 ):
+# 			if (  layer1[i,k] > c/10 and layer2[k,j] > c/10 ):
 			
-				val = val + 1
+# 				val = val + 1
 
-				connectivity_count[i,j] = 1
+# 				connectivity_count[i,j] = 1
 
 
 #now compute the r_{i} and \phi quantities
 ######################################################################
 
 #compute the matrix overlaps
-phi_reg_reg = np.zeros([Num_treg,Num_treg])
-
-for i in range(Num_treg):
-	for j in range(Num_treg):
-
-		phi_reg_reg[i,j] = np.sum( vx[:]*layer2[:,i]*layer2[:,j]  )
-
-
+phi_reg_reg = (layer2.T*vx).dot(layer2)
 
 #compute the matrix overlaps
-phi_cell_reg = np.zeros([Num_tcell,Num_treg])
+phi_cell_reg = (layer1*vx).dot(layer2)
 
-for i in range(Num_tcell):
-	for j in range(Num_treg):
-
-		phi_cell_reg[i,j] = np.sum( vx[:]*layer1[i,:]*layer2[:,j]  )
-
-
-rvals = np.zeros([Num_tcell])
-
-for i in range(Num_tcell):
-
-	rvals[i] = np.sum( vx[:]*layer1[i,:]    )
+rvals = layer1.dot(vx)
 
 ####################################################################################
 #compute the Treg steady state and active set of constraints
 #QP is done with CVXOPT packages
-from cvxopt import matrix, solvers
+import cvxpy as cvx
+#from cvxopt import matrix, solvers
 import numpy as np
-solvers.options['show_progress'] = False 
+#solvers.options['show_progress'] = False 
 
 #Set up the quadratic part of QP matrix
-Qmat = np.zeros([ Num_treg , Num_treg ])
+# Qmat = np.zeros([ Num_treg , Num_treg ])
 
-for i in range(Num_treg):
-	for j in range(Num_treg):
+# for i in range(Num_treg):
+# 	for j in range(Num_treg):
 		
-		Qmat[i,j] = phi_reg_reg[i,j]
+# 		Qmat[i,j] = phi_reg_reg[i,j]
 
 
 #Convert to CVXOPT format
-Q = matrix(Qmat)
+#Q = matrix(Qmat)
 
-p = np.zeros(Num_treg)
-p = matrix(p)
-
-
-G = np.zeros([Num_tcell + Num_treg , Num_treg ])
-
-for i in range(Num_tcell):
-
-	for j in range(Num_treg):
-
-		G[i,j] = -1.0* phi_cell_reg[i,j] * (rvals[i]**(-1.0) ) 
-
-#enforce positivity
-for i in range(Num_tcell, Num_tcell + Num_treg):
-
-	G[i, i - Num_tcell - Num_treg ] = -1.0
+#p = np.zeros(Num_treg)
+#p = matrix(p)
 
 
-G = matrix(G)
-
-h = np.zeros([Num_tcell + Num_treg])
-for i in range(Num_tcell):
-	h[i] = -1.0 * (rho) 
-
-for i in range(Num_tcell,   Num_treg):
-
-	h[i] = 0.0
+G = np.vstack((-(phi_cell_reg.T/rvals).T,-np.eye(Num_treg)))
 
 
-h = matrix(h)
+#G = matrix(G)
 
-sol =  solvers.qp(Q, p, G, h)
+h = np.hstack((-rho*np.ones(Num_tcell),np.zeros(Num_treg)))
+
+
+#h = matrix(h)
+Treg = cvx.Variable(Num_treg)
+obj = cvx.Minimize((1/2)*cvx.quad_form(Treg,phi_reg_reg))
+constraints = [G@Treg <= h]
+prob = cvx.Problem(obj, constraints)
+prob.solve(solver=cvx.ECOS,abstol=1e-9,feastol=1e-7,abstol_inacc=1e-5,feastol_inacc=1e-5,max_iters=5000,verbose=True)
+
+dual=constraints[0].dual_value[:Num_tcell]
+Treg=Treg.value
+
+#sol =  solvers.qp(Q, p, G, h)
 #the QP solution, this is Treg part
-vals = np.array( sol['x'] )
+#vals = np.array( sol['x'] )
 
 
 #the dual varibles
-dual = np.array( sol['z'] )
-dual = dual[0:Num_tcell]
+#dual = np.array( sol['z'] )
+#dual = dual[0:Num_tcell]
 
-Treg = vals[:,0]
+#Treg = vals[:,0]
 
 #compute the distance to the specalist point
-distance = np.sqrt( np.sum( (Treg - (rho/c)*np.ones(Num_treg) )**2        ) )
-print('distance')
-print(distance)
+#distance = np.sqrt( np.sum( (Treg - (rho/c)*np.ones(Num_treg) )**2        ) )
+#print('distance')
+#print(distance)
 
 
 plt.hist(Treg)
+plt.gca().set_title('Treg abundances')
 plt.show()
 
 
-#compute the aproxomation
-aprox_values = np.zeros([Num_sites])
+# #compute the aproxomation
+# aprox_values = np.zeros([Num_sites])
 
-for i in range(Num_sites):
+# for i in range(Num_sites):
 
-	aprox_values[i] = np.sum( Treg[:] * layer2[i,:] )
+# 	aprox_values[i] = np.sum( Treg[:] * layer2[i,:] )
 
 
-plt.hist(aprox_values)
-plt.show()
+# plt.hist(aprox_values)
+# plt.show()
 
 
 quit()
