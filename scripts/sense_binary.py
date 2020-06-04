@@ -15,8 +15,6 @@ params={
 'Num_sites' : 100,
 #the Treg- antigen site binding strenth
 'c' : 1.0,
-#the varience in Treg-antigen binding around zero
-'sigma_c' : 0.2,
 #the varience in Treg-antigen binding around c
 'sigma_cp' : 0.0,
 #the binding
@@ -45,7 +43,8 @@ for p in pvec:
             phi_reg_reg = phi_reg_reg[:,Treg_list]
             phi_cell_reg = phi_cell_reg_base[:,Treg_list]
             Tcell, Treg = TrainNetwork(phi_reg_reg,phi_cell_reg,rvals)
-            dgdvx = ((pix*(1-palphax[Treg_list,:].T.dot(Treg)))**2).mean()
-            output.append([p,alpha_vec[k],dgdvx])
+            Qvar = ((1-palphax[Treg_list,:].T.dot(Treg))**2).mean()
+            ILvar = ((1-pix.T.dot(Tcell)/(palphax[Treg_list,:].T.dot(Treg)))**2).mean()
+            output.append([p,alpha_vec[k],Qvar,ILvar])
             
-pd.DataFrame(output,columns=['p','alpha','sensitivity']).to_csv('../data/sensitivity_binary.csv')
+    pd.DataFrame(output,columns=['p','alpha','Qvar','ILvar']).to_csv('../data/sensitivity_binary.csv')

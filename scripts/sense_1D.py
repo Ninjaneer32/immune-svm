@@ -1,9 +1,10 @@
 from immune_functions import *
+import pickle
 
 #declare simulation paramaters:
-nw_vec = np.linspace(1,3.5,30)
+nw_vec = np.linspace(1,10,100)
 Num_rep = 10
-thresh=1e-4
+thresh=1e-6
 params={
 'sampling' : '1D',
 #the number of Tregs
@@ -33,7 +34,7 @@ vx = np.ones(params['Num_sites'])
 ####################################################################################
 #compute the Treg steady state and active set of constraints
 output = []
-
+spectra = []
 for k in range(len(nw_vec)):
     params['niche_width'] = nw_vec[k]*params['Num_sites']/params['Num_treg']
     print(k)
@@ -42,9 +43,13 @@ for k in range(len(nw_vec)):
         pix, palphax = MakeAffinities(params)
         phi_reg_reg, phi_cell_reg, rvals = MakeOverlaps(pix,palphax,vx)
         Tcell, Treg = TrainNetwork(phi_reg_reg,phi_cell_reg,rvals)
-        dgdvx = ((pix*(1-palphax.T.dot(Treg)))**2).mean()
+        Qvar = ((1-palphax.T.dot(Treg))**2).mean()
+        ILvar = ((1-pix.T.dot(Tcell)/(palphax.T.dot(Treg)))**2).mean()
         lam,u = np.linalg.eig(phi_reg_reg)
-        alpha= params['Num_treg']/((lam>thresh).sum())
-        output.append([alpha,dgdvx])
-            
-pd.DataFrame(output,columns=['alpha','sensitivity']).to_csv('../data/sensitivity_1D.csv')
+        alpha= params['Num_treg']/((np.sqrt(np.abs(lam))>thresh).sum())
+        output.append([alpha,Qvar,ILvar])
+        spectra.append(lam)
+
+    with open('../data/spectra.dat','wb') as f:
+        pickle.dump(spectra,f)
+    pd.DataFrame(output,columns=['alpha','Qvar','ILvar']).to_csv('../data/sensitivity_1D.csv')

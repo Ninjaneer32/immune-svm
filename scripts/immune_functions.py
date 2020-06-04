@@ -71,3 +71,17 @@ def ddt_simple(t,y,phi_reg_reg,phi_cell_reg,rvals):
     dTregdt = Treg*(phi_cell_reg.T.dot(Tcell) - phi_reg_reg.dot(Treg))
     
     return np.hstack((dTcelldt, dTregdt))
+
+def ddt_full(t,y,pix,palphax,vx):
+    Num_treg = len(palphax)
+    Num_tcell = len(pix)
+    Tcell = y[:Num_tcell]
+    Treg = y[Num_tcell:]
+
+    Qx = palphax.T.dot(Treg)
+    ILx = (pix.T.dot(Tcell))/(palphax.T.dot(Treg))
+    
+    dTcelldt = Tcell*pix.dot(vx*(1-Qx))
+    dTregdt = Treg*palphax.dot(vx*(ILx-1))
+    
+    return np.hstack((dTcelldt, dTregdt))
