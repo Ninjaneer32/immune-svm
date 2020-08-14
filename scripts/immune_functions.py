@@ -6,6 +6,7 @@ from scipy.stats import norm
 import seaborn as sns
 import pandas as pd
 from scipy.integrate import solve_ivp
+from scipy.spatial.distance import cdist
 
 def BinaryRandomMatrix(S,M,p):
     r = np.random.rand(S,M)
@@ -24,6 +25,12 @@ def MakeAffinities(params):
         Treg_choice = np.random.choice(params['Num_sites'],size=params['Num_treg'],replace=True)
         pix = circ[Tcell_choice,:]
         palphax = params['c']*circ[Treg_choice,:]
+    elif sampling == 'Multidimensional':
+        antigens = np.random.randn(params['Num_sites'],params['shape_dim'])
+        receptors = np.random.randn(params['Num_tcell'],params['shape_dim'])
+        receptors_reg = np.random.randn(params['Num_treg'],params['shape_dim'])
+        pix = np.exp(-cdist(receptors,antigens,'sqeuclidean')/(2*params['sigma']**2))
+        palphax = params['c']*np.exp(-cdist(receptors_reg,antigens,'sqeuclidean')/(2*params['sigma']**2))
     elif sampling == 'Circulant':
         circ = circulant(norm.pdf(np.linspace(-params['Num_sites']/2,params['Num_sites']/2,params['Num_sites'])/params['niche_width']))
         pix = circ[np.linspace(0,params['Num_sites']-1,params['Num_tcell'],dtype=int),:]
