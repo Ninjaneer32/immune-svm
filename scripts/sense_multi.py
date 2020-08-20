@@ -2,10 +2,10 @@ from immune_functions import *
 import pickle
 
 #declare simulation paramaters:
-nw_vec = np.linspace(5,20,10)
+nw_vec = np.linspace(5,20,100)
 t0 = 0
 tf = 100
-Num_rep = 1
+Num_rep = 10
 thresh=1e-5
 params={
 'sampling' : 'Multidimensional',
@@ -61,4 +61,4 @@ for k in range(len(nw_vec)):
 
     with open('../data/spectra.dat','wb') as f:
         pickle.dump(spectra,f)
-    pd.DataFrame(output,columns=['alpha','Qvar','ILvar']).to_csv('../data/sensitivity_multi_2.csv')
+    pd.DataFrame(output,columns=['alpha','Qvar','ILvar']).to_csv('../data/sensitivity_multi_3.csv')
